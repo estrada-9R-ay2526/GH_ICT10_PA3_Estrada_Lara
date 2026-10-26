@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
+    <title>Working with Dictionaries</title>
+
+    <!-- Futuristic Google Fonts for JARVIS Aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN for smooth layout utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --cyan-glow: #00f0ff;
+            --blue-glow: #0088ff;
+            --orange-glow: #ffaa00;
+            --dark-bg: #030b14;
+            --panel-bg: rgba(5, 19, 41, 0.75);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #d1f4ff;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Ambient HUD Scanlines overlay */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 240, 255, 0.03) 50%,
+                rgba(0, 240, 255, 0.03)
+            );
+            background-size: 100% 4px;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Glassmorphism Sci-Fi Card Container */
+        .jarvis-card {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 20;
+            border-radius: 12px;
+        }
+
+        /* Tech HUD Corners */
+        .hud-corner {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--cyan-glow);
+            pointer-events: none;
+        }
+        .hud-corner-tl { top: -2px; left: -2px; border-top: 3px solid; border-left: 3px solid; }
+        .hud-corner-tr { top: -2px; right: -2px; border-top: 3px solid; border-right: 3px solid; }
+        .hud-corner-bl { bottom: -2px; left: -2px; border-bottom: 3px solid; border-left: 3px solid; }
+        .hud-corner-br { bottom: -2px; right: -2px; border-bottom: 3px solid; border-right: 3px solid; }
+
+        /* Typography Styling */
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 0 10px var(--cyan-glow), 0 0 20px rgba(0, 240, 255, 0.5);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Holographic Input Styling retaining precise selector matching */
+        #dictionary, input[type="text"]#dictionary {
+            width: 100%;
+            background: rgba(0, 15, 30, 0.8) !important;
+            border: 1.5px solid rgba(0, 240, 255, 0.4) !important;
+            color: #00f0ff !important;
+            font-family: 'Share Tech Mono', monospace !important;
+            padding: 14px 18px !important;
+            font-size: 1.1rem !important;
+            border-radius: 6px !important;
+            outline: none !important;
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1) !important;
+            transition: all 0.3s ease !important;
+            letter-spacing: 1px !important;
+        }
+
+        #dictionary:focus, input[type="text"]#dictionary:focus {
+            border-color: var(--cyan-glow) !important;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 15px rgba(0, 240, 255, 0.2) !important;
+            background: rgba(0, 25, 50, 0.9) !important;
+        }
+
+        #dictionary::placeholder {
+            color: rgba(0, 240, 255, 0.4);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        /* Search Button Sci-Fi Styling retaining py-click attribute */
+        input[type="button"][py-click="game_details"] {
+            width: 100%;
+            margin-top: 15px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 136, 255, 0.4)) !important;
+            border: 1px solid var(--cyan-glow) !important;
+            color: #ffffff !important;
+            font-family: 'Orbitron', sans-serif !important;
+            font-weight: 700 !important;
+            padding: 12px 24px !important;
+            font-size: 1rem !important;
+            letter-spacing: 3px !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            border-radius: 6px !important;
+            position: relative !important;
+            overflow: hidden !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3) !important;
+            display: block !important;
+        }
+
+        input[type="button"][py-click="game_details"]:hover {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.5), rgba(0, 136, 255, 0.8)) !important;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.8), 0 0 5px #ffffff !important;
+            color: #030b14 !important;
+            transform: translateY(-1px);
+        }
+
+        input[type="button"][py-click="game_details"]:active {
+            transform: translateY(1px);
+        }
+
+        /* Dynamic Sci-Fi Result Terminal */
+        #result {
+            margin-top: 25px;
+            min-height: 80px;
+            padding: 16px;
+            background: rgba(2, 12, 24, 0.85);
+            border: 1px dashed rgba(0, 240, 255, 0.4);
+            border-radius: 6px;
+            color: #a5f3fc;
+            font-size: 1rem;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+            word-break: break-word;
+        }
+
+        #result:empty::before {
+            content: "SYSTEM READY // AWAITING QUERY INPUT...";
+            color: rgba(0, 240, 255, 0.3);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            display: block;
+            text-align: center;
+            animation: pulse-text 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Rotating Background HUD Arcs */
+        .hud-ring {
+            position: absolute;
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .hud-ring-1 {
+            width: 550px;
+            height: 550px;
+            border-top: 2px solid rgba(0, 240, 255, 0.4);
+            border-bottom: 2px solid rgba(0, 240, 255, 0.1);
+            animation: spin 25s linear infinite;
+        }
+        .hud-ring-2 {
+            width: 450px;
+            height: 450px;
+            border-right: 2px dashed rgba(255, 170, 0, 0.3);
+            border-left: 2px dashed rgba(0, 240, 255, 0.3);
+            animation: spin-reverse 18s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient Sci-Fi Audio Synthesizer Script -->
+    <script>
+        // Subtle futuristic audio feedback when clicking the search button
+        function playSciFiBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        }
+    </script>
+
+    <!-- Scanline effect overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Background Interactive Particle Canvas -->
+    <canvas id="bg-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- Background Dynamic Spinning HUD Arcs -->
+    <div class="hud-ring hud-ring-1"></div>
+    <div class="hud-ring hud-ring-2"></div>
+
+    <!-- JARVIS Central Interactive Panel -->
+    <main class="jarvis-card w-full max-w-md p-6 sm:p-8 m-4 shadow-2xl">
+        <!-- Tech Frame Corners -->
+        <div class="hud-corner hud-corner-tl"></div>
+        <div class="hud-corner hud-corner-tr"></div>
+        <div class="hud-corner hud-corner-bl"></div>
+        <div class="hud-corner hud-corner-br"></div>
+
+        <!-- Top Status Bar -->
+        <div class="flex justify-between items-center text-xs text-cyan-400 opacity-70 mb-4 border-b border-cyan-500/20 pb-2">
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                SYSTEM: ONLINE
+            </span>
+            <span>SEC-LEVEL: 04</span>
+            <span id="hud-clock">00:00:00</span>
+        </div>
+
+        <h2>Know the Creator of your Favorite Game</h2>
+
+        <form onsubmit="return false;">
+            <input type="text" id="dictionary" placeholder="Enter your favorite game"><br>
+            <input type="button" py-click="game_details" value="Search" onclick="playSciFiBeep()">
+        </form>
+
+        <div id="result"></div>
+
+        <!-- Bottom Tech Status Footer -->
+        <div class="mt-4 pt-2 border-t border-cyan-500/20 flex justify-between text-[10px] text-cyan-500/50 uppercase tracking-widest">
+            <span>JARVIS HUD v3.8</span>
+            <span>A.I. CORE ACTIVE</span>
+        </div>
+    </main>
+
+    <py-script src="main.py"></py-script>
+
+    <!-- Sci-Fi Canvas Background Grid & Particle Engine -->
+    <script>
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const clockEl = document.getElementById('hud-clock');
+            if (clockEl) clockEl.textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Background Particles Canvas Animation
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const particles = [];
+        const particleCount = 45;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                alpha: Math.random() * 0.5 + 0.2
+            });
+        }
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw radial tech grid lines
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
+            ctx.lineWidth = 1;
+
+            const gridSize = 60;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw particles and connection lines
+            ctx.fillStyle = '#00f0ff';
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 120) {
+                        ctx.strokeStyle = '#00f0ff';
+                        ctx.globalAlpha = (1 - dist / 120) * 0.15;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            ctx.globalAlpha = 1.0;
+            requestAnimationFrame(drawBackground);
+        }
+
+        drawBackground();
+    </script>
+</body>
+</html>
